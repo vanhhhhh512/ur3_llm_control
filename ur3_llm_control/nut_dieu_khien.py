@@ -142,9 +142,9 @@ class NutDieuKhien(Node):
     def in_dau_trang(self) -> None:
         nv = self.nhiem_vu
         print(NGAN, flush=True)
-        print(f"  Sinh vien : {nv.ten_sinh_vien}", flush=True)
-        print(f"  MSSV      : {nv.ma_sinh_vien}", flush=True)
-        print(f"  P = {nv.hai_chu_so_cuoi} mod 6 = {nv.p}  ->  nhiem vu ca nhan:", flush=True)
+        print(f"  STUDENT     : {nv.ten_sinh_vien}", flush=True)
+        print(f"  STUDENT ID  : {nv.ma_sinh_vien}", flush=True)
+        print(f"  P = {nv.hai_chu_so_cuoi} mod 6 = {nv.p}  ->  PERSONAL ASSIGNMENT:", flush=True)
         for vung, vat in nv.ban_giao_theo_thu_tu():
             print(f"      {vung}  <-  {vat}", flush=True)
         print(NGAN, flush=True)
@@ -169,14 +169,14 @@ class NutDieuKhien(Node):
         ket_qua = kiem_tra(ke_hoach_tho, vat_the_tren_ban=self.workcell.danh_sach_vat())
         if not ket_qua.hop_le:
             print("", flush=True)
-            print("LLM PLAN (tho):", flush=True)
+            print("LLM PLAN (raw):", flush=True)
             print(f"  {ke_hoach_tho}", flush=True)
             print("", flush=True)
             print("PLAN REJECTED:", flush=True)
             for ly_do in ket_qua.ly_do:
                 print(f"  - {ly_do}", flush=True)
             print("", flush=True)
-            print("TASK REJECTED, robot khong di chuyen", flush=True)
+            print("TASK REJECTED - the robot did not move", flush=True)
             return False
 
         cac_dong = [mo_ta_buoc(b) for b in ket_qua.cac_buoc]
@@ -201,9 +201,27 @@ class NutDieuKhien(Node):
             self.hien_thi.dat_buoc(None)
 
         print("", flush=True)
-        print("TRANG THAI WORKCELL:", flush=True)
+        print("WORKCELL STATE:", flush=True)
         print(self.workcell.tom_tat(), flush=True)
         return kq.thanh_cong
+
+
+def _thu_muc_mac_dinh(ten: str) -> str:
+    """Tim thu muc config/prompt, uu tien thu muc cai dat cua goi.
+
+    Nho vay chay bang `ros2 run ur3_llm_control nut_dieu_khien` o bat ky dau
+    cung duoc, khong can dung o goc ma nguon hay go duong dan day du.
+    """
+    if os.path.isdir(ten):
+        return ten
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        duong_dan = os.path.join(get_package_share_directory("ur3_llm_control"), ten)
+        if os.path.isdir(duong_dan):
+            return duong_dan
+    except Exception:
+        pass
+    return ten
 
 
 def _doc_lenh_tu_ban_phim(hang_doi: "queue.Queue[Optional[str]]") -> None:
@@ -219,8 +237,8 @@ def _doc_lenh_tu_ban_phim(hang_doi: "queue.Queue[Optional[str]]") -> None:
 
 def main(argv: Optional[List[str]] = None) -> int:
     bo_doc = argparse.ArgumentParser(description="Dieu khien UR3e bang cau lenh ngon ngu tu nhien")
-    bo_doc.add_argument("--cau-hinh", default="config", help="thu muc chua scene/student/llm yaml")
-    bo_doc.add_argument("--prompt", default="prompt", help="thu muc chua system prompt")
+    bo_doc.add_argument("--cau-hinh", default="", help="thu muc chua scene/student/llm yaml")
+    bo_doc.add_argument("--prompt", default="", help="thu muc chua system prompt")
     bo_doc.add_argument("--lenh", default="", help="chay mot cau lenh roi thoat")
     bo_doc.add_argument("--world", default="ur3_workcell", help="ten world trong Gazebo")
     # Nhan chuoi thay vi co, vi launch file truyen xuong duoi dang "true"/"false"
@@ -228,13 +246,16 @@ def main(argv: Optional[List[str]] = None) -> int:
                         help="true de dung truoc moi skill cho toi khi bam Next trong RViz")
     tham_so, con_lai = bo_doc.parse_known_args(argv if argv is not None else sys.argv[1:])
 
+    thu_muc_cau_hinh = tham_so.cau_hinh or _thu_muc_mac_dinh("config")
+    thu_muc_prompt = tham_so.prompt or _thu_muc_mac_dinh("prompt")
+
     rclpy.init(args=con_lai)
     cho_nut = str(tham_so.cho_nut_bam_neu).strip().lower() in {"true", "1", "yes", "co"}
-    node = NutDieuKhien(tham_so.cau_hinh, tham_so.prompt, tham_so.world, cho_nut)
+    node = NutDieuKhien(thu_muc_cau_hinh, thu_muc_prompt, tham_so.world, cho_nut)
     ma_thoat = 0
     try:
         node.in_dau_trang()
-        print("Cho MoveIt san sang...", flush=True)
+        print("Waiting for MoveIt...", flush=True)
         node.moveit.cho_san_sang()
         node.nap_workcell_vao_moveit()
         node.hien_thi.ve()
@@ -244,10 +265,10 @@ def main(argv: Optional[List[str]] = None) -> int:
             ma_thoat = 0 if node.xu_ly(tham_so.lenh) else 1
         else:
             print("", flush=True)
-            print("Go cau lenh roi Enter (go 'thoat' de ket thuc). Vi du:", flush=True)
-            print("  Dua khoi mau do vao vung B", flush=True)
-            print("  Hay lay khoi mau vang va dat no vao o A", flush=True)
-            print("  Move the blue cube to zone C", flush=True)
+            print("Type a command and press Enter ('quit' to exit). Examples:", flush=True)
+            print("  Put the red cube in zone A", flush=True)
+            print("  Move the blue cube to zone B", flush=True)
+            print("  Dua khoi mau vang vao vung C", flush=True)
             print("  Arrange all objects according to my student ID", flush=True)
             hang_doi: "queue.Queue[Optional[str]]" = queue.Queue()
             threading.Thread(target=_doc_lenh_tu_ban_phim, args=(hang_doi,), daemon=True).start()
@@ -261,9 +282,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                     break
                 node.xu_ly(cau_lenh)
                 print("", flush=True)
-                print("Cau lenh tiep theo:", flush=True)
+                print("Next command:", flush=True)
     except (LoiCauHinhLLM, LoiMoveIt) as loi:
-        print(f"LOI: {loi}", flush=True)
+        print(f"ERROR: {loi}", flush=True)
         ma_thoat = 2
     except KeyboardInterrupt:
         pass

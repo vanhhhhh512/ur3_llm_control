@@ -87,11 +87,11 @@ class Workcell:
         return self.vat_trong_vung.get(ten_vung)
 
     def tom_tat(self) -> str:
-        dong = [f"tay may: {self.dang_cam or 'trong'}"]
+        dong = [f"gripper: {self.dang_cam or 'empty'}"]
         for vat in sorted(self.vi_tri_vat):
             x, y, z = self.vi_tri_vat[vat]
             o_vung = next((v for v, t in self.vat_trong_vung.items() if t == vat), "-")
-            dong.append(f"  {vat:12s} ({x:+.3f}, {y:+.3f}, {z:+.3f})  vung: {o_vung}")
+            dong.append(f"  {vat:12s} ({x:+.3f}, {y:+.3f}, {z:+.3f})  zone: {o_vung}")
         return "\n".join(dong)
 
 

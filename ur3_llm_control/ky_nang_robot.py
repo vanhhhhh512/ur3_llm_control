@@ -77,7 +77,7 @@ class KyNangRobot:
     def _di_khop(self, khop: Sequence[float], nhan: str) -> None:
         cd = self._wc.chuyen_dong
         self._moveit.di_toi_khop(khop, cd.he_so_van_toc, cd.he_so_gia_toc)
-        self._log(f"    {nhan}: xong")
+        self._log(f"    {nhan}: done")
 
     def _di_toi_diem(self, xyz: Sequence[float], nhan: str) -> None:
         """Di toi mot diem bang cach lap ke hoach theo rang buoc tu the.
@@ -92,11 +92,11 @@ class KyNangRobot:
             # Khong di thang duoc thi ghe qua tu the trung chuyen roi thu lai.
             # Tu vi tri gap cua vat nay sang vung dat kia, duong noi truc tiep
             # co the khong ton tai vi tay may phai luon qua cac vat da dat.
-            self._log(f"    {nhan}: bi ket, ghe qua tu the trung chuyen ({loi})")
+            self._log(f"    {nhan}: blocked, routing via transit pose ({loi})")
             self._moveit.di_toi_khop(cd.tu_the_trung_chuyen,
                                      cd.he_so_van_toc, cd.he_so_gia_toc)
             self._moveit.di_toi_diem(self._tu_the(xyz), cd.he_so_van_toc, cd.he_so_gia_toc)
-        self._log(f"    {nhan}: xong")
+        self._log(f"    {nhan}: done")
 
     def _len_cao_an_toan(self) -> None:
         """Nang tool0 len do cao mang vat truoc khi di ngang."""
@@ -111,7 +111,7 @@ class KyNangRobot:
         if self._wc.dang_cam is not None:
             return KetQuaKyNang(THAT_BAI, f"tay may con dang cam {self._wc.dang_cam}")
         try:
-            self._di_khop(self._wc.chuyen_dong.tu_the_home, "ve home")
+            self._di_khop(self._wc.chuyen_dong.tu_the_home, "go home")
         except LoiMoveIt as loi:
             return KetQuaKyNang(LAP_KE_HOACH_THAT_BAI, str(loi))
         return KetQuaKyNang(THANH_CONG)
@@ -130,10 +130,10 @@ class KyNangRobot:
 
         lech_z = -(self._wc.canh_vat / 2.0 + self._wc.chuyen_dong.khe_ho_gap)
         try:
-            self._di_toi_diem(treo, f"toi phia tren {ten_vat}")
+            self._di_toi_diem(treo, f"approach above {ten_vat}")
             # Xoa vat can truoc khi ha xuong: tool0 se nam ngay tren mat khoi
             self._moveit.xoa_hop(ten_vat)
-            self._di_toi_diem(diem_gap, "ha xuong gap")
+            self._di_toi_diem(diem_gap, "descend to grasp")
 
             # Dong "gripper hut": gan khoi vao tool0 va cho no bam theo tay
             # may trong Gazebo.
@@ -141,9 +141,9 @@ class KyNangRobot:
             if self._bam_theo is not None:
                 self._bam_theo(ten_vat)
             self._wc.ghi_nhan_gap(ten_vat)
-            self._log(f"    da gan {ten_vat} vao {self._wc.link_cong_tac}")
+            self._log(f"    attached {ten_vat} to {self._wc.link_cong_tac}")
 
-            self._di_toi_diem(mang, "nang vat len")
+            self._di_toi_diem(mang, "lift object")
         except LoiMoveIt as loi:
             if self._bam_theo is not None:
                 self._bam_theo(None)
@@ -170,8 +170,8 @@ class KyNangRobot:
         mang = [diem_tha[0], diem_tha[1], diem_tha[2] + cd.cao_di_chuyen]
 
         try:
-            self._di_toi_diem(mang, f"mang {ten_vat} toi {ten_vung}")
-            self._di_toi_diem(diem_tha, "ha xuong tha")
+            self._di_toi_diem(mang, f"carry {ten_vat} to {ten_vung}")
+            self._di_toi_diem(diem_tha, "descend to release")
 
             # Mo "gripper hut": go khoi khoi tool0 roi dat lai vao the gioi
             self._moveit.tha_vat(ten_vat)
@@ -180,9 +180,9 @@ class KyNangRobot:
             self._wc.ghi_nhan_tha(ten_vat, ten_vung)
             if self._dong_bo is not None:
                 self._dong_bo(ten_vat, self._wc.vi_tri_vat[ten_vat])
-            self._log(f"    da tha {ten_vat} xuong {ten_vung}")
+            self._log(f"    released {ten_vat} at {ten_vung}")
 
-            self._di_toi_diem(treo, "rut tay len")
+            self._di_toi_diem(treo, "retreat")
             # Chi dua vat can tro lai the gioi SAU khi tay may da rut len,
             # neu khong tu the hien tai bi coi la dang va cham voi chinh no.
             self._moveit.them_hop(ten_vat, self._wc.vi_tri_vat[ten_vat],

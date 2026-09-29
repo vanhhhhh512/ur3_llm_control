@@ -73,7 +73,7 @@ class BoThucThi:
                 ket_qua.buoc_hong = nhan
                 ket_qua.trang_thai_hong = kq.trang_thai
                 self._log("")
-                self._log(f"TASK FAILED tai {nhan} ({kq.trang_thai})")
+                self._log(f"TASK FAILED at {nhan} ({kq.trang_thai})")
                 return ket_qua
 
         self._log("")

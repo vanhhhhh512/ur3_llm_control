@@ -154,19 +154,33 @@ Terminal 1 — dựng workcell:
 ros2 launch ur3_llm_control workcell.launch.py
 ```
 
-Terminal 2 — điều khiển bằng ngôn ngữ tự nhiên:
+Terminal 2 — điều khiển bằng ngôn ngữ tự nhiên. Dùng `ros2 run` chứ **không**
+dùng `ros2 launch`, vì `ros2 launch` không chuyển bàn phím vào node:
 
 ```bash
-ros2 launch ur3_llm_control llm_robot.launch.py
+ros2 run ur3_llm_control nut_dieu_khien
 ```
 
-Gõ câu lệnh rồi Enter. Thêm `cho_nut_bam:=true` để robot dừng trước mỗi skill
-cho tới khi bấm **Next** trên panel *RvizVisualToolsGui* — tiện khi quay video.
+Gõ câu lệnh rồi Enter, gõ `quit` để thoát. Node tự tìm `config/` và `prompt/`
+trong thư mục cài đặt của gói nên chạy ở đâu cũng được.
+
+Dừng trước mỗi skill cho tới khi bấm **Next** trên panel *RvizVisualToolsGui*
+(tiện khi quay video):
+
+```bash
+ros2 run ur3_llm_control nut_dieu_khien --cho-nut-bam-neu true
+```
 
 Chạy một câu lệnh rồi thoát:
 
 ```bash
-ros2 launch ur3_llm_control llm_robot.launch.py lenh:="Đưa khối màu đỏ vào vùng A"
+ros2 run ur3_llm_control nut_dieu_khien --lenh "Put the red cube in zone A"
+```
+
+Launch file `llm_robot.launch.py` vẫn dùng được cho chế độ một câu lệnh:
+
+```bash
+ros2 launch ur3_llm_control llm_robot.launch.py lenh:="Put the red cube in zone A"
 ```
 
 ## 7. Ví dụ kết quả
