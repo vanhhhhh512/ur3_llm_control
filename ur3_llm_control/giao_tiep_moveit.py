@@ -267,7 +267,7 @@ class GiaoTiepMoveIt:
         req.start_state = self._trang_thai_bat_dau()
         req.goal_constraints = [rang_buoc]
         req.num_planning_attempts = so_lan_thu
-        req.allowed_planning_time = 15.0
+        req.allowed_planning_time = 4.0
         req.max_velocity_scaling_factor = float(he_so_van_toc)
         req.max_acceleration_scaling_factor = float(he_so_gia_toc)
         req.workspace_parameters = WorkspaceParameters(
@@ -330,7 +330,7 @@ class GiaoTiepMoveIt:
         req.start_state = self._trang_thai_bat_dau()
         req.goal_constraints = [rang_buoc]
         req.num_planning_attempts = int(so_lan_thu)
-        req.allowed_planning_time = 15.0
+        req.allowed_planning_time = 4.0
         req.max_velocity_scaling_factor = float(he_so_van_toc)
         req.max_acceleration_scaling_factor = float(he_so_gia_toc)
         req.workspace_parameters = WorkspaceParameters(header=Header(frame_id=self._khung))
@@ -495,7 +495,7 @@ class GiaoTiepMoveIt:
         req.start_state.is_diff = True          # dung trang thai hien tai cua move_group
         req.goal_constraints = [rang_buoc]
         req.num_planning_attempts = int(so_lan_thu)
-        req.allowed_planning_time = 15.0
+        req.allowed_planning_time = 4.0
         req.max_velocity_scaling_factor = float(he_so_van_toc)
         req.max_acceleration_scaling_factor = float(he_so_gia_toc)
         req.workspace_parameters = WorkspaceParameters(header=Header(frame_id=self._khung))
@@ -509,7 +509,7 @@ class GiaoTiepMoveIt:
 
     def di_toi_khop(self, khop_dich: Sequence[float], he_so_van_toc: float,
                     he_so_gia_toc: float, so_lan_thu: int = 8,
-                    thoi_gian_cho: float = 180.0, so_vong_goi: int = 4) -> None:
+                    thoi_gian_cho: float = 180.0, so_vong_goi: int = 2) -> None:
         """Goi /move_action, thu lai ca lan goi neu that bai.
 
         OMPL la bo lap ke hoach ngau nhien: cung mot bai toan co the that bai
@@ -598,6 +598,10 @@ class GiaoTiepMoveIt:
         Cac hat giong khac nhau cho ra cac nhanh nghiem khac nhau (khuyu gap
         len hay gap xuong, vai vuon truoc hay lui sau). Sap xep theo khoang
         cach khop de uu tien tu the it phai di chuyen nhat.
+
+        Chi thu toi da BA ung vien: OMPL giai duoc duong kha thi trong chua
+        toi mot giay, nen thu nhieu hon chi lam robot dung im rat lau truoc
+        khi bao that bai ma hau nhu khong tang ty le thanh cong.
         """
         self._lam_moi_khop()
         goc = self.khop_hien_tai()
@@ -626,7 +630,7 @@ class GiaoTiepMoveIt:
             raise LoiMoveIt(f"khong co nghiem IT nao cho ({x:.3f}, {y:.3f}, {z:.3f})")
 
         loi_cuoi: Optional[Exception] = None
-        for _, nghiem in sorted(ung_vien, key=lambda k: k[0]):
+        for _, nghiem in sorted(ung_vien, key=lambda k: k[0])[:3]:
             try:
                 self.di_toi_khop(nghiem, he_so_van_toc, he_so_gia_toc)
                 return
