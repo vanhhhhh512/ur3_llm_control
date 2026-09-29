@@ -18,7 +18,7 @@ from rclpy.node import Node
 
 class DongBoGazebo:
     def __init__(self, node: Node, ten_world: str = "ur3_workcell",
-                 tan_so: float = 25.0, timeout_ms: int = 300) -> None:
+                 tan_so: float = 40.0, timeout_ms: int = 300) -> None:
         self._node = node
         self._world = ten_world
         self._timeout_ms = timeout_ms
